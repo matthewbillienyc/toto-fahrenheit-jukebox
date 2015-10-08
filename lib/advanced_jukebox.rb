@@ -1,45 +1,108 @@
-#Here is the song hash you will be working with. Each key is a song name and each value is the location of it's mp3 file.
-#make sure to edit the value of each key to replace < path to this directory >
-#with the correct path to this directory on your computer
+require 'pry'
 
-# my_songs = {
-# "Go Go GO" => '< path to this directory >/jukebox-cli/audio/Emerald-Park/01.mp3',
-# "LiberTeens" => '< path to this directory >/jukebox-cli/audio/Emerald-Park/02.mp3',
-# "Hamburg" =>  '< path to this directory >/jukebox-cli/audio/Emerald-Park/03.mp3',
-# "Guiding Light" => '< path to this directory >/jukebox-cli/audio/Emerald-Park/04.mp3',
-# "Wolf" => '< path to this directory >/jukebox-cli/audio/Emerald-Park/05.mp3',
-# "Blue" => '< path to this directory >/jukebox-cli/audio/Emerald-Park/06.mp3',
-# "Graduation Failed" => '< path to this directory >/jukebox-cli/audio/Emerald-Park/07.mp3'
-# }
+class Jukebox
 
-def help
-  #this method should be the same as in jukebox.rb
+  attr_accessor :song_numbers, :song_names, :songs, :numbered_songs, :exit, :input
 
-end
+  def initialize(songs)
+    @songs = songs
+    @input = nil
+    @exit = false
+  end
 
+  def call
+    set_song_numbers
+    number_songs
+    puts "Welcome to the TOTO - FAHRENHEIT jukebox! Type 'help' for available commands. This jukebox requires VLC player."
+    while @input != 'exit'
+      do_command
+    end
+  end
 
+  def help
+    puts "I accept the following commands:
+    \n - help : displays this help message
+    \n - list : displays a list of songs you can play
+    \n - play : lets you choose a song to play
+    \n - exit : exits this program"
+  end
 
-def list(my_songs)
-  #this method is different! Collect the keys of the my_songs hash and 
-  #list the songs by name
-end
+  def list
+    songs.keys.each_with_index do |song_name, index|
+      puts "#{index+1}: #{song_name}"
+    end
+  end
 
+  def set_song_numbers
+    @song_numbers ||= []
+    @song_names = songs.keys.map { |song| song }
+    song_names.each_with_index { |name, index| song_numbers << (index+1).to_s }
+    # binding.pry
+  end
 
-def play(my_songs)
-  #this method is slightly different!
-  #you should still ask the user for input and collect their song choice
-  #this time, only allow user's to input a song name
-  #check to see if the name they give is in fact a key of the my_songs hash
-  #if it isn't, tell them their choice is invalid
-  #if it is, play the song using the system 'open <file path>' syntax
-  #get the file path of the song by looking it up in the my_songs hash
+  def number_songs
+    @numbered_songs = Hash[song_numbers.zip song_names]
+  end
   
+  def play
+    list
+    puts "Enter the song number of title as it appears in the list above:"
+    print ">> "
+    get_input
+    if numbered_songs.has_key?(input)
+      puts "Now playing - #{song_names[(input.to_i)-1]}"
+      path = songs[song_names[(input.to_i)-1]].gsub("< path to this directory >/jukebox-cli/", "")
+      # binding.pry
+      system("open " + path + ' -a "vlc"')
+    elsif songs.has_key?(input)
+      puts "Now playing - #{input}"
+      path = songs[input].gsub("< path to this directory >/jukebox-cli/", "")
+      system("open " + path + ' -a "vlc"')
+    else
+      puts "Sorry, please enter a valid song or song number."
+    end
+  end
+
+  def get_input
+    @input = gets.chomp.downcase
+  end
+
+  def do_command
+    get_input
+    case @input
+    when 'help'
+      help
+    when 'list'
+      list
+    when 'exit'
+      exit_jukebox
+    when 'play'
+      play
+    else
+      'Invalid command'
+    end
+  end
+
+  def exit_jukebox
+    puts "Goodbye"
+    exit = true
+  end
+
 end
 
-def exit_jukebox
-  #this method is the same as in jukebox.rb
-end
 
-def run(my_songs)
-  #this method is the same as in jukebox.rb
-end
+my_songs = {
+"Til the End" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/01.flac',
+"We Can Make it Tonight" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/02.flac',
+"Without Your Love" =>  '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/03.flac',
+"Can't Stand it any Longer" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/04.flac',
+"I'll Be Over You" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/05.flac',
+"Fahrenheit" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/06.flac',
+"Somewhere Tonight" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/07.flac',
+"Could This Be Love" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/08.flac',
+"Lea" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/09.flac',
+"Don't Stop Me Now" => '< path to this directory >/jukebox-cli/audio/Toto-Fahrenheit/10.flac'
+}
+
+jukebox = Jukebox.new(my_songs)
+jukebox.call
